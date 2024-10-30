@@ -55,16 +55,34 @@ def load_glove_embeddings(glove_file):
 
 
 def filter_vocabulary(vocabulary, model, threshold=0.7):
-    filtered_words = []
+    # Precompute word embeddings for all words in the vocabulary
+    word_embeddings = []
+    valid_words = []
+
     for word in vocabulary:
         if word in model:
-            similar_words = [w for w in vocabulary if
-                             w != word and
-                             w in model and
-                             model.similarity(word, w) > threshold]
-            if similar_words:
-                filtered_words.append(word)
+            word_embedding = model[word]  # Get embedding for the word
+            word_embeddings.append(word_embedding)
+            valid_words.append(word)
+
+    # Stack the embeddings into a matrix
+    embedding_matrix = np.vstack(word_embeddings)
+
+    # Compute pairwise cosine similarities for the entire matrix
+    similarity_matrix = cosine_similarity(embedding_matrix)
+
+    # Initialize a list to store filtered words
+    filtered_words = []
+
+    # Loop over each word and its similarity scores
+    for i, word in enumerate(valid_words):
+        # Get all words that have similarity greater than the threshold
+        similar_indices = np.where((similarity_matrix[i] > threshold) & (similarity_matrix[i] < 1.0))[0]
+        if len(similar_indices) > 0:
+            filtered_words.append(word)
+
     return filtered_words
+
 
 
 # Step 4: Contextual Embeddings using Transformers
