@@ -38,7 +38,7 @@ scikit-learn
 Follow these steps to use the toolkit:
 
 1. **Generate the vocabulary**: 
-   Run `vocabulary_semantic_filtering.py` <enter size of vocabulary> to create a vocabulary in size x
+   Run `vocabulary_semantic_filtering.py <enter size of vocabulary>`to create a vocabulary in size x
 
    ```bash
    python vocabulary_semantic_filtering.py <200(example)>
