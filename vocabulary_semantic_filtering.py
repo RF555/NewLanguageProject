@@ -14,7 +14,7 @@ import con
 
 voc_size = int(sys.argv[1])
 
-Download necessary NLTK data
+# Download necessary NLTK data
 nltk.download('brown')
 nltk.download('stopwords')
 nltk.download('punkt')
