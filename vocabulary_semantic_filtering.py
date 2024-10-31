@@ -5,11 +5,16 @@ from gensim.models import KeyedVectors
 from transformers import AutoTokenizer, AutoModel
 import numpy as np
 import torch
+import sys
+import runpy
 
-import time
 import pandas as pd
 
-# Download necessary NLTK data
+import con
+
+voc_size = int(sys.argv[1])
+
+Download necessary NLTK data
 nltk.download('brown')
 nltk.download('stopwords')
 nltk.download('punkt')
@@ -41,7 +46,7 @@ def get_hypernyms(word):
     return list(hypernyms)
 
 
-def create_basic_words(most_common_words, vocabulary_size=600):
+def create_basic_words(most_common_words, vocabulary_size=300):
     basic_words = set()
     for word in most_common_words:
         basic_words.update(get_hypernyms(word))
@@ -52,6 +57,10 @@ def create_basic_words(most_common_words, vocabulary_size=600):
 def load_glove_embeddings(glove_file):
     model = KeyedVectors.load_word2vec_format(glove_file, binary=False, no_header=True)
     return model
+
+
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 def filter_vocabulary(vocabulary, model, threshold=0.7):
@@ -82,7 +91,6 @@ def filter_vocabulary(vocabulary, model, threshold=0.7):
             filtered_words.append(word)
 
     return filtered_words
-
 
 
 # Step 4: Contextual Embeddings using Transformers
@@ -120,7 +128,7 @@ if __name__ == "__main__":
     print("Done! ------- most_common_words")
 
     # Semantic Coverage with WordNet
-    basic_words = create_basic_words(most_common_words, vocabulary_size=600)
+    basic_words = create_basic_words(most_common_words, vocabulary_size=voc_size)
     print("Done! ------- basic_words")
 
     # Filtering with Embeddings (GloVe)
@@ -129,29 +137,14 @@ if __name__ == "__main__":
     glove_filtered_words = filter_vocabulary(basic_words, glove_model)
     print("Done! ------- glove_filtered_words")
 
-    filtered_basic_words = list(extract_vocabulary(glove_filtered_words, corpus_size=600))
+    filtered_basic_words = list(extract_vocabulary(glove_filtered_words, corpus_size=voc_size))
     print("Done! ------- filtered_basic_words")
 
     # Contextual Embeddings using Transformers
     tokenizer, transformer_model = load_transformer_model()
 
-    # Example of similarity calculation for refinement
-    sample_word = 'color'
-    refined_word = 'red'
-    similarity = compute_similarity(sample_word, refined_word, tokenizer, transformer_model)
-    print(f'Similarity between "{sample_word}" and "{refined_word}": {similarity}')
-
-    # Example text samples for evaluation
-    text_samples = [
-        "The quick brown fox jumps over the lazy dog.",
-        "Artificial intelligence is transforming many industries."
-    ]
-
-    # Evaluate filtered vocabulary
-    coverage = evaluate_vocabulary(filtered_basic_words, text_samples)
-    print(f'Vocabulary coverage: {coverage} words covered')
-
-    current_time = time.strftime("%Y%m%d-%H%M%S")
 
     df = pd.DataFrame({'vocabulary': filtered_basic_words})
-    df.to_csv(f'vocabulary_{current_time}.csv')
+    df.to_csv('vocab'+str(voc_size)+'.csv')
+    con.extract_words_in_format('vocab'+str(voc_size)+'.csv','vocab_words_formatted.txt')
+    runpy.run_path('get_vocab_dict.py')
